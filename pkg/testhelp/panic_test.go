@@ -583,8 +583,9 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 
 		// Now test the results of PanicsRELoop() itself
 		if len(noPanic) != 0 {
-			t.Errorf("PanicsRELoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s'",
-				len(noPanic), test.name)
+			t.Errorf("PanicsRELoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s':\n"+
+				"%#+v",
+				len(noPanic), test.name, noPanic)
 		}
 		if len(noMatches) != len(test.wantNoMatches) {
 			t.Errorf("PanicsRELoop(): Wrong number of panic-matches failures: expected %d, got %d in test table '%s'\n"+
@@ -801,8 +802,9 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 
 		// Now test the results of PanicsValLoop() itself
 		if len(noPanic) != 0 {
-			t.Errorf("PanicsValLoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s'",
-				len(noPanic), test.name)
+			t.Errorf("PanicsValLoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s':\n"+
+				"%#+v",
+				len(noPanic), test.name, noPanic)
 		}
 		if len(noEquals) != len(test.wantNoEquals) {
 			t.Errorf("PanicsValLoop(): Wrong number of panic-equals failures: expected %d, got %d in test table '%s'\n"+
