@@ -311,23 +311,34 @@ type PanicStrRETest struct {
 	WantRE  string
 }
 
+type NoCMECallbackResult struct {
+	Name string
+	Val  interface{}
+}
+
 // Tests PanicsLoop(), PanicsStrLoop(), and PanicsRELoop()
 func TestPanicsLoopX3(t *testing.T) {
 	var noPanic []string
-	var noCM []string // CM = Contains/Matches
+	// CM = Contains/Matches
+	var noCM []NoCMECallbackResult
 	var plainTable []PanicTest
 	var strTable []PanicStrTest
 	var reTable []PanicRETest
 
 	pErr := errors.New("ppp110")
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
-	notCMFunc := func(testName string) { noCM = append(noCM, testName) }
+	notContainsFunc := func(test PanicStrTest, pVal interface{}) {
+		noCM = append(noCM, NoCMECallbackResult{test.Name, pVal})
+	}
+	notMatchesFunc := func(test PanicRETest, pVal interface{}) {
+		noCM = append(noCM, NoCMECallbackResult{test.Name, pVal})
+	}
 
 	tests := []struct {
 		name        string
 		pTable      []PanicStrRETest
 		wantNoPanic []string
-		wantNoCM    []string
+		wantNoCM    []NoCMECallbackResult
 	}{
 		{
 			"p, cm; p, cm",
@@ -337,7 +348,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, cm; p, cm: 2", func() { panic("ppp111") }, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"p, cm; p, ncm",
@@ -346,7 +357,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, cm; p, ncm: 2", func() { panic("ppp121") }, "zzz", "z{3}[0-9]{3}"},
 			},
 			[]string{},
-			[]string{"p, cm; p, ncm: 2"},
+			[]NoCMECallbackResult{{"p, cm; p, ncm: 2", "ppp121"}},
 		},
 		{
 			"p, cm; np",
@@ -355,7 +366,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, cm; np: 2", func() {}, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{"p, cm; np: 2"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 
 		{
@@ -365,7 +376,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, ncm; p, cm: 2", func() { panic("ppp211") }, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{},
-			[]string{"p, ncm; p, cm: 1"},
+			[]NoCMECallbackResult{{"p, ncm; p, cm: 1", "ppp210"}},
 		},
 		{
 			"p, ncm; p, ncm",
@@ -374,7 +385,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, ncm; p, ncm: 2", func() { panic("ppp221") }, "zzz", "z{3}[0-9]{3}"},
 			},
 			[]string{},
-			[]string{"p, ncm; p, ncm: 1", "p, ncm; p, ncm: 2"},
+			[]NoCMECallbackResult{{"p, ncm; p, ncm: 1", "ppp220"}, {"p, ncm; p, ncm: 2", "ppp221"}},
 		},
 		{
 			"p, ncm; np",
@@ -383,7 +394,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"p, ncm; np: 2", func() {}, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{"p, ncm; np: 2"},
-			[]string{"p, ncm; np: 1"},
+			[]NoCMECallbackResult{{"p, ncm; np: 1", "ppp230"}},
 		},
 
 		{
@@ -393,7 +404,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"np; p, cm: 2", func() { panic("ppp311") }, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{"np; p, cm: 1"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"np; p, ncm",
@@ -402,7 +413,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"np; p, ncm: 2", func() { panic("ppp321") }, "zzz", "z{3}[0-9]{3}"},
 			},
 			[]string{"np; p, ncm: 1"},
-			[]string{"np; p, ncm: 2"},
+			[]NoCMECallbackResult{{"np; p, ncm: 2", "ppp321"}},
 		},
 		{
 			"np; np",
@@ -411,7 +422,7 @@ func TestPanicsLoopX3(t *testing.T) {
 				{"np; np: 2", func() {}, "ppp", "p{3}[0-9]{3}"},
 			},
 			[]string{"np; np: 1", "np; np: 2"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 	}
 	for _, test := range tests {
@@ -442,7 +453,7 @@ func TestPanicsLoopX3(t *testing.T) {
 		for _, tableEntry := range test.pTable {
 			strTable = append(strTable, PanicStrTest{tableEntry.Name, tableEntry.F, tableEntry.WantStr})
 		}
-		PanicsStrLoop(strTable, notPanicFunc, notCMFunc)
+		PanicsStrLoop(strTable, notPanicFunc, notContainsFunc)
 		if len(noPanic) != len(test.wantNoPanic) {
 			t.Errorf("PanicsStrLoop(): Wrong number of panic-test failures: expected %d, got %d in test table '%s'\n"+
 				"Expected failures:\n%#+v\nGot:\n%#+v",
@@ -462,7 +473,7 @@ func TestPanicsLoopX3(t *testing.T) {
 		} else {
 			for i := 0; i < len(noCM); i++ {
 				if noCM[i] != test.wantNoCM[i] {
-					t.Errorf("PanicsStrLoop(): Wrong panic-contains failure: expected '%s', got '%s'",
+					t.Errorf("PanicsStrLoop(): Wrong panic-contains failure: expected\n%#+v\ngot\n%#+v",
 						test.wantNoCM[i], noCM[i])
 				}
 			}
@@ -475,7 +486,7 @@ func TestPanicsLoopX3(t *testing.T) {
 		for _, tableEntry := range test.pTable {
 			reTable = append(reTable, PanicRETest{tableEntry.Name, tableEntry.F, tableEntry.WantRE})
 		}
-		PanicsRELoop(reTable, notPanicFunc, notCMFunc)
+		PanicsRELoop(reTable, notPanicFunc, notMatchesFunc)
 		if len(noPanic) != len(test.wantNoPanic) {
 			t.Errorf("PanicsRELoop(): Wrong number of panic-test failures: expected %d, got %d in test table '%s'\n"+
 				"Expected failures:\n%#+v\nGot:\n%#+v",
@@ -495,7 +506,7 @@ func TestPanicsLoopX3(t *testing.T) {
 		} else {
 			for i := 0; i < len(noCM); i++ {
 				if noCM[i] != test.wantNoCM[i] {
-					t.Errorf("PanicsRELoop(): Wrong panic-matches failure: expected '%s', got '%s'",
+					t.Errorf("PanicsRELoop(): Wrong panic-matches failure: expected\n%#+v\ngot\n%#+v",
 						test.wantNoCM[i], noCM[i])
 				}
 			}
@@ -512,16 +523,18 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 
 	// for the PanicsRELoop() being run by PanicsStr()
 	var noPanic []string
-	var noMatches []string
+	var noMatches []NoCMECallbackResult
 	badRE1 := "[a-z" // no closing ]
 	badRE2 := "[0-9" // no closing ]
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
-	notMatchesFunc := func(testName string) { noMatches = append(noMatches, testName) }
+	notMatchesFunc := func(test PanicRETest, pVal interface{}) {
+		noMatches = append(noMatches, NoCMECallbackResult{test.Name, pVal})
+	}
 
 	tests := []struct {
 		name          string
 		pTable        []PanicRETest
-		wantNoMatches []string
+		wantNoMatches []NoCMECallbackResult
 	}{
 		{
 			"ok, not ok",
@@ -531,7 +544,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 				{"ok, not ok: 2", func() { panic("ppp112") }, badRE2},
 			},
 			// first test within PanicsRELoop() proceeds normally, second one panics
-			[]string{"ok, not ok: 1"},
+			[]NoCMECallbackResult{{"ok, not ok: 1", "ppp111"}},
 		},
 		{
 			"not ok, ok",
@@ -540,7 +553,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 				// ok but wrong
 				{"not ok, ok: 2", func() { panic("ppp222") }, "z{3}[0-9]{3}"},
 			},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"not ok, not ok",
@@ -548,7 +561,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 				{"not ok, not ok: 1", func() { panic("ppp331") }, badRE1},
 				{"not ok, not ok: 2", func() { panic("ppp332") }, badRE2},
 			},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 	}
 	for _, test := range tests {
@@ -580,7 +593,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 		} else {
 			for i := 0; i < len(noMatches); i++ {
 				if noMatches[i] != test.wantNoMatches[i] {
-					t.Errorf("PanicsRELoop(): Wrong panic-matches failure: expected '%s', got '%s'",
+					t.Errorf("PanicsRELoop(): Wrong panic-matches failure: expected\n%#+v\ngot\n%#+v",
 						test.wantNoMatches[i], noMatches[i])
 				}
 			}
@@ -590,16 +603,18 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 
 func TestPanicsValLoop(t *testing.T) {
 	var noPanic []string
-	var noEquals []string
+	var noEquals []NoCMECallbackResult
 
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
-	notEqualsFunc := func(testName string) { noEquals = append(noEquals, testName) }
+	notEqualsFunc := func(test PanicValTest, pVal interface{}) {
+		noEquals = append(noEquals, NoCMECallbackResult{test.Name, pVal})
+	}
 
 	tests := []struct {
 		name         string
 		pTable       []PanicValTest
 		wantNoPanic  []string
-		wantNoEquals []string
+		wantNoEquals []NoCMECallbackResult
 	}{
 		{
 			"p, eq; p, eq",
@@ -608,7 +623,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, eq; p, eq: 2", func() { panic("ppp111") }, "ppp111"},
 			},
 			[]string{},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"p, eq; p, neq",
@@ -618,7 +633,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, eq; p, neq: 2", func() { panic(121) }, 129},
 			},
 			[]string{},
-			[]string{"p, eq; p, neq: 2"},
+			[]NoCMECallbackResult{{"p, eq; p, neq: 2", 121}},
 		},
 		{
 			"p, eq; np",
@@ -627,7 +642,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, eq; np: 2", func() {}, "ppp131"},
 			},
 			[]string{"p, eq; np: 2"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 
 		{
@@ -637,7 +652,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, neq; p, eq: 2", func() { panic("ppp211") }, "ppp211"},
 			},
 			[]string{},
-			[]string{"p, neq; p, eq: 1"},
+			[]NoCMECallbackResult{{"p, neq; p, eq: 1", "ppp210"}},
 		},
 		{
 			"p, neq; p, neq",
@@ -647,7 +662,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, neq; p, neq: 2", func() { panic(221.0) }, 221},
 			},
 			[]string{},
-			[]string{"p, neq; p, neq: 1", "p, neq; p, neq: 2"},
+			[]NoCMECallbackResult{{"p, neq; p, neq: 1", "220"}, {"p, neq; p, neq: 2", 221.0}},
 		},
 		{
 			"p, neq; np",
@@ -656,7 +671,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"p, neq; np: 2", func() {}, "ppp231"},
 			},
 			[]string{"p, neq; np: 2"},
-			[]string{"p, neq; np: 1"},
+			[]NoCMECallbackResult{{"p, neq; np: 1", "ppp230"}},
 		},
 
 		{
@@ -666,7 +681,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"np; p, eq: 2", func() { panic("ppp311") }, "ppp311"},
 			},
 			[]string{"np; p, eq: 1"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"np; p, neq",
@@ -675,7 +690,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"np; p, neq: 2", func() { panic("ppp321") }, "zzz321"},
 			},
 			[]string{"np; p, neq: 1"},
-			[]string{"np; p, neq: 2"},
+			[]NoCMECallbackResult{{"np; p, neq: 2", "ppp321"}},
 		},
 		{
 			"np; np",
@@ -684,7 +699,7 @@ func TestPanicsValLoop(t *testing.T) {
 				{"np; np: 2", func() {}, "ppp331"},
 			},
 			[]string{"np; np: 1", "np; np: 2"},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 	}
 	for _, test := range tests {
@@ -710,7 +725,7 @@ func TestPanicsValLoop(t *testing.T) {
 		} else {
 			for i := 0; i < len(noEquals); i++ {
 				if noEquals[i] != test.wantNoEquals[i] {
-					t.Errorf("PanicsValLoop(): Wrong panic-equals failure: expected '%s', got '%s'",
+					t.Errorf("PanicsValLoop(): Wrong panic-equals failure: expected\n%#+v\ngot\n%#+v",
 						test.wantNoEquals[i], noEquals[i])
 				}
 			}
@@ -727,14 +742,16 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 
 	// for the PanicsValLoop() being run by PanicsStr()
 	var noPanic []string
-	var noEquals []string
+	var noEquals []NoCMECallbackResult
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
-	notEqualsFunc := func(testName string) { noEquals = append(noEquals, testName) }
+	notEqualsFunc := func(test PanicValTest, pVal interface{}) {
+		noEquals = append(noEquals, NoCMECallbackResult{test.Name, pVal})
+	}
 
 	tests := []struct {
 		name         string
 		pTable       []PanicValTest
-		wantNoEquals []string
+		wantNoEquals []NoCMECallbackResult
 	}{
 		{
 			"ok, not ok",
@@ -744,7 +761,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 				{"ok, not ok: 2", func() { panic([]string{"a", "b"}) }, []string{"a", "b"}},
 			},
 			// first test within PanicsValLoop() proceeds normally, second one panics
-			[]string{"ok, not ok: 1"},
+			[]NoCMECallbackResult{{"ok, not ok: 1", "ppp111"}},
 		},
 		{
 			"not ok, ok",
@@ -753,7 +770,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 				// ok but wrong
 				{"not ok, ok: 2", func() { panic("ppp222") }, "zzz222"},
 			},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 		{
 			"not ok, not ok",
@@ -762,7 +779,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 				{"not ok, not ok: 1", func() { panic([]string{"a", "b"}) }, []string{"a", "b"}},
 				{"not ok, not ok: 2", func() { panic([]string{"a", "b"}) }, []string{"c", "d"}},
 			},
-			[]string{},
+			[]NoCMECallbackResult{},
 		},
 	}
 	for _, test := range tests {
@@ -794,7 +811,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 		} else {
 			for i := 0; i < len(noEquals); i++ {
 				if noEquals[i] != test.wantNoEquals[i] {
-					t.Errorf("PanicsValLoop(): Wrong panic-equals failure: expected '%s', got '%s'",
+					t.Errorf("PanicsValLoop(): Wrong panic-equals failure: expected\n%#+v\ngot\n%#+v",
 						test.wantNoEquals[i], noEquals[i])
 				}
 			}

@@ -239,14 +239,17 @@ func NotPanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 // PanicsStrLoop runs through a slice of panic tests, including checking the panic values to make sure they contain
 // specific strings.  For any test function that does not panic, notPanicFunc is called with the name from the test's
 // struct.  For any test function that does panic, but for which the panic value cannot be cast to a string or error
-// containing the test's WantStr, notContainsFunc is called with the name from the test's struct.  See also PanicsStr().
-func PanicsStrLoop(tests []PanicStrTest, notPanicFunc func(testName string), notContainsFunc func(testName string)) {
+// containing the test's WantStr, notContainsFunc is called with the test's struct and the panic value.  See also
+// PanicsStr().
+func PanicsStrLoop(tests []PanicStrTest, notPanicFunc func(testName string),
+	notContainsFunc func(test PanicStrTest, pVal interface{}),
+) {
 	for _, test := range tests {
-		didPanic, pContainsStr, _ := PanicsStr(test.F, test.WantStr)
+		didPanic, pContainsStr, pVal := PanicsStr(test.F, test.WantStr)
 		if !didPanic {
 			notPanicFunc(test.Name)
 		} else if !pContainsStr {
-			notContainsFunc(test.Name)
+			notContainsFunc(test, pVal)
 		}
 	}
 }
@@ -254,36 +257,40 @@ func PanicsStrLoop(tests []PanicStrTest, notPanicFunc func(testName string), not
 // PanicsRELoop runs through a slice of panic tests, including checking the panic values to make sure they match
 // specific regular expressions.  For any test function that does not panic, notPanicFunc is called with the name from
 // the test's struct.  For any test function that does panic, but for which the panic value cannot be cast to a string
-// or error matching the test's WantRE, notMatchesFunc is called with the name from the test's struct.  See also
+// or error matching the test's WantRE, notMatchesFunc is called with the test's struct and the panic value.  See also
 // PanicsRE().
 //
 // PanicsRELoop itself panics when attempting to run any test for which WantRE does not represent a valid regular
 // expression.
-func PanicsRELoop(tests []PanicRETest, notPanicFunc func(testName string), notMatchesFunc func(testName string)) {
+func PanicsRELoop(tests []PanicRETest, notPanicFunc func(testName string),
+	notMatchesFunc func(test PanicRETest, pVal interface{}),
+) {
 	for _, test := range tests {
-		didPanic, pMatchesRE, _ := PanicsRE(test.F, test.WantRE)
+		didPanic, pMatchesRE, pVal := PanicsRE(test.F, test.WantRE)
 		if !didPanic {
 			notPanicFunc(test.Name)
 		} else if !pMatchesRE {
-			notMatchesFunc(test.Name)
+			notMatchesFunc(test, pVal)
 		}
 	}
 }
 
 // PanicsValLoop runs through a slice of panic tests, including checking the panic values.  For any test function that
 // does not panic, notPanicFunc is called with the name from the test's struct.  For any test function that does panic,
-// but for which the panic value does not equal the test's WantVal, notEqualsFunc is called with the name from the
-// test's struct.  See also PanicsVal().
+// but for which the panic value does not equal the test's WantVal, notEqualsFunc is called with the test's struct and
+// the panic value.  See also PanicsVal().
 //
 // PanicsValLoop itself panics when attempting to run any test for which the panic value and the test's WantVal are of
 // the same type, but it's not a type that Go can compare with ==.
-func PanicsValLoop(tests []PanicValTest, notPanicFunc func(testName string), notEqualsFunc func(testName string)) {
+func PanicsValLoop(tests []PanicValTest, notPanicFunc func(testName string),
+	notEqualsFunc func(test PanicValTest, pVal interface{}),
+) {
 	for _, test := range tests {
-		didPanic, pEquals, _ := PanicsVal(test.F, test.WantVal)
+		didPanic, pEquals, pVal := PanicsVal(test.F, test.WantVal)
 		if !didPanic {
 			notPanicFunc(test.Name)
 		} else if !pEquals {
-			notEqualsFunc(test.Name)
+			notEqualsFunc(test, pVal)
 		}
 	}
 }
