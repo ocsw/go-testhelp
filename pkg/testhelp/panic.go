@@ -242,6 +242,8 @@ func NotPanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 // containing the test's WantStr, notContainsFunc is called with the test's struct and the panic value.  If the
 // wantStrAll passed to PanicsStrLoop() directly is not nil, it is used in place of the tests' wantStrs.  See also
 // PanicsStr().
+//
+// See NotContainsFuncErrorFactory() and NotContainsFuncFatalFactory() for good starting points for notContainsFunc.
 func PanicsStrLoop(tests []PanicStrTest, wantStrAll *string, notPanicFunc func(testName string),
 	notContainsFunc func(test PanicStrTest, pVal interface{}),
 ) {
@@ -268,6 +270,8 @@ func PanicsStrLoop(tests []PanicStrTest, wantStrAll *string, notPanicFunc func(t
 // or error matching the test's WantRE, notMatchesFunc is called with the test's struct and the panic value.  If the
 // wantREAll passed to PanicsRELoop() directly is not nil, it is used in place of the tests' wantREs.  See also
 // PanicsRE().
+//
+// See NotMatchesFuncErrorFactory() and NotMatchesFuncFatalFactory() for good starting points for notMatchesFunc.
 //
 // PanicsRELoop itself panics when attempting to run any test for which WantRE does not represent a valid regular
 // expression.
@@ -297,6 +301,8 @@ func PanicsRELoop(tests []PanicRETest, wantREAll *string, notPanicFunc func(test
 // the panic value.  If the wantValAll passed to PanicsValLoop() directly is not nil, it is used in place of the tests'
 // wantVals.  See also PanicsVal().
 //
+// See NotEqualsFuncErrorFactory() and NotEqualsFuncFatalFactory() for good starting points for notEqualsFunc.
+//
 // PanicsValLoop itself panics when attempting to run any test for which the panic value and the test's WantVal are of
 // the same type, but it's not a type that Go can compare with ==.
 func PanicsValLoop(tests []PanicValTest, wantValAll *interface{}, notPanicFunc func(testName string),
@@ -316,5 +322,66 @@ func PanicsValLoop(tests []PanicValTest, wantValAll *interface{}, notPanicFunc f
 		} else if !pEquals {
 			notEqualsFunc(test, pVal)
 		}
+	}
+}
+
+// TestingT is a stub interface intended to be satisfied by a *testing.T.  It is here to help test factory functions
+// such as NotContainsFuncErrorFactory().
+type TestingT interface {
+	Errorf(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
+}
+
+// NotContainsFuncErrorFactory returns a function suitable for passing to PanicsStrLoop() as a notContainsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+func NotContainsFuncErrorFactory(t TestingT) func(test PanicStrTest, pVal interface{}) {
+	return func(test PanicStrTest, pVal interface{}) {
+		t.Errorf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v\nin test '%s'",
+			test.WantStr, pVal, test.Name)
+	}
+}
+
+// NotContainsFuncFatalFactory returns a function suitable for passing to PanicsStrLoop() as a notContainsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+func NotContainsFuncFatalFactory(t TestingT) func(test PanicStrTest, pVal interface{}) {
+	return func(test PanicStrTest, pVal interface{}) {
+		t.Fatalf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v\nin test '%s'",
+			test.WantStr, pVal, test.Name)
+	}
+}
+
+// NotMatchesFuncErrorFactory returns a function suitable for passing to PanicsRELoop() as a notMatchesFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+func NotMatchesFuncErrorFactory(t TestingT) func(test PanicRETest, pVal interface{}) {
+	return func(test PanicRETest, pVal interface{}) {
+		t.Errorf("Incorrect panic value: expected a string matching\n\"%s\"\ngot\n%#+v\nin test '%s'",
+			test.WantRE, pVal, test.Name)
+	}
+}
+
+// NotMatchesFuncFatalFactory returns a function suitable for passing to PanicsRELoop() as a notMatchesFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+func NotMatchesFuncFatalFactory(t TestingT) func(test PanicRETest, pVal interface{}) {
+	return func(test PanicRETest, pVal interface{}) {
+		t.Fatalf("Incorrect panic value: expected a string matching\n\"%s\"\ngot\n%#+v\nin test '%s'",
+			test.WantRE, pVal, test.Name)
+	}
+}
+
+// NotEqualsFuncErrorFactory returns a function suitable for passing to PanicsValLoop() as a notEqualsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+func NotEqualsFuncErrorFactory(t TestingT) func(test PanicValTest, pVal interface{}) {
+	return func(test PanicValTest, pVal interface{}) {
+		t.Errorf("Incorrect panic value: expected\n%#+v\ngot\n%#+v\nin test '%s'",
+			test.WantVal, pVal, test.Name)
+	}
+}
+
+// NotEqualsFuncFatalFactory returns a function suitable for passing to PanicsValLoop() as a notEqualsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+func NotEqualsFuncFatalFactory(t TestingT) func(test PanicValTest, pVal interface{}) {
+	return func(test PanicValTest, pVal interface{}) {
+		t.Fatalf("Incorrect panic value: expected\n%#+v\ngot\n%#+v\nin test '%s'",
+			test.WantVal, pVal, test.Name)
 	}
 }

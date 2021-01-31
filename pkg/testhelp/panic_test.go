@@ -18,6 +18,7 @@ package testhelp
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -1141,6 +1142,166 @@ func TestNotPanicsLoop(t *testing.T) {
 			for i := 0; i < len(failed); i++ {
 				if failed[i] != test.wantFailed[i] {
 					t.Errorf("Wrong not-panic-test failure: expected '%s', got '%s'", test.wantFailed[i], failed[i])
+				}
+			}
+		}
+	}
+}
+
+type TestingTMock struct{}
+
+var mockedErrors, mockedFatals []string
+
+func (*TestingTMock) Errorf(format string, args ...interface{}) {
+	mockedErrors = append(mockedErrors, fmt.Sprintf(format, args...))
+}
+
+func (*TestingTMock) Fatalf(format string, args ...interface{}) {
+	mockedFatals = append(mockedFatals, fmt.Sprintf(format, args...))
+}
+
+type PanicStrREValTest struct {
+	Name    string
+	F       func()
+	WantStr string
+	WantRE  string
+	WantVal interface{}
+}
+
+// Tests NotContainsFuncErrorFactory(), NotContainsFuncFatalFactory(), NotMatchesFuncErrorFactory(),
+// NotMatchesFuncFatalFactory(), NotEqualsFuncErrorFactory(), and NotEqualsFuncFatalFactory()
+func TestPanicsLoopFactoriesX6(t *testing.T) {
+	var noPanic []string
+
+	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
+	mockedT := TestingTMock{}
+	notContainsFuncError := NotContainsFuncErrorFactory(&mockedT)
+	notContainsFuncFatal := NotContainsFuncFatalFactory(&mockedT)
+	notMatchesFuncError := NotMatchesFuncErrorFactory(&mockedT)
+	notMatchesFuncFatal := NotMatchesFuncFatalFactory(&mockedT)
+	notEqualsFuncError := NotEqualsFuncErrorFactory(&mockedT)
+	notEqualsFuncFatal := NotEqualsFuncFatalFactory(&mockedT)
+
+	strReValTable := []PanicStrREValTest{
+		{"goodtest", func() { panic("ppp111") }, "ppp", "p{3}[0-9]{3}", "ppp111"},
+		{"badtest", func() { panic("rrr222") }, "ppp", "p{3}[0-9]{3}", "ppp222"},
+	}
+	wantNoContains := []string{
+		"Incorrect panic value: expected a string containing\n\"ppp\"\ngot\n\"rrr222\"\nin test 'badtest'",
+	}
+	wantNoMatches := []string{
+		"Incorrect panic value: expected a string matching\n\"p{3}[0-9]{3}\"\ngot\n\"rrr222\"\nin test 'badtest'",
+	}
+	wantNoEquals := []string{
+		"Incorrect panic value: expected\n\"ppp222\"\ngot\n\"rrr222\"\nin test 'badtest'",
+	}
+
+	// Test NotContainsFuncErrorFactory() and NotContainsFuncFatalFactory() with PanicsStrLoop()
+	strTable := []PanicStrTest{}
+	for _, tableEntry := range strReValTable {
+		strTable = append(strTable, PanicStrTest{tableEntry.Name, tableEntry.F, tableEntry.WantStr})
+	}
+	mockedErrors = nil
+	mockedFatals = nil
+	strFactories := []struct {
+		name   string
+		f      func(test PanicStrTest, pVal interface{})
+		gotVar *[]string
+	}{
+		{"Error", notContainsFuncError, &mockedErrors},
+		{"Fatal", notContainsFuncFatal, &mockedFatals},
+	}
+	for _, factory := range strFactories {
+		noPanic = nil
+		PanicsStrLoop(strTable, nil, notPanicFunc, factory.f)
+		if len(noPanic) != 0 {
+			t.Errorf("PanicsStrLoop() / %s factory: Unexpected panic-test failure(s): expected none, got %d:\n%#+v",
+				factory.name, len(noPanic), noPanic)
+		}
+		if len(*factory.gotVar) != len(wantNoContains) {
+			t.Errorf("PanicsStrLoop() / %s factory: Wrong number of panic-contains failures: expected %d, got %d:\n"+
+				"Expected failures:\n%#+v\nGot:\n%#+v",
+				factory.name, len(wantNoContains), len(*factory.gotVar), wantNoContains, *factory.gotVar)
+		} else {
+			for i := 0; i < len(*factory.gotVar); i++ {
+				if (*factory.gotVar)[i] != wantNoContains[i] {
+					t.Errorf("PanicsStrLoop() / %s factory: Wrong panic-contains failure: "+
+						"expected\n%#+v\ngot\n%#+v",
+						factory.name, wantNoContains[i], (*factory.gotVar)[i])
+				}
+			}
+		}
+	}
+
+	// Test NotMatchesFuncErrorFactory() and NotMatchesFuncFatalFactory() with PanicsRELoop()
+	reTable := []PanicRETest{}
+	for _, tableEntry := range strReValTable {
+		reTable = append(reTable, PanicRETest{tableEntry.Name, tableEntry.F, tableEntry.WantRE})
+	}
+	mockedErrors = nil
+	mockedFatals = nil
+	reFactories := []struct {
+		name   string
+		f      func(test PanicRETest, pVal interface{})
+		gotVar *[]string
+	}{
+		{"Error", notMatchesFuncError, &mockedErrors},
+		{"Fatal", notMatchesFuncFatal, &mockedFatals},
+	}
+	for _, factory := range reFactories {
+		noPanic = nil
+		PanicsRELoop(reTable, nil, notPanicFunc, factory.f)
+		if len(noPanic) != 0 {
+			t.Errorf("PanicsRELoop() / %s factory: Unexpected panic-test failure(s): expected none, got %d:\n%#+v",
+				factory.name, len(noPanic), noPanic)
+		}
+		if len(*factory.gotVar) != len(wantNoMatches) {
+			t.Errorf("PanicsRELoop() / %s factory: Wrong number of panic-matches failures: expected %d, got %d:\n"+
+				"Expected failures:\n%#+v\nGot:\n%#+v",
+				factory.name, len(wantNoMatches), len(*factory.gotVar), wantNoMatches, *factory.gotVar)
+		} else {
+			for i := 0; i < len(*factory.gotVar); i++ {
+				if (*factory.gotVar)[i] != wantNoMatches[i] {
+					t.Errorf("PanicsRELoop() / %s factory: Wrong panic-matches failure: "+
+						"expected\n%#+v\ngot\n%#+v",
+						factory.name, wantNoMatches[i], (*factory.gotVar)[i])
+				}
+			}
+		}
+	}
+
+	// Test NotEqualsFuncErrorFactory() and NotEqualsFuncFatalFactory() with PanicsValLoop()
+	valTable := []PanicValTest{}
+	for _, tableEntry := range strReValTable {
+		valTable = append(valTable, PanicValTest{tableEntry.Name, tableEntry.F, tableEntry.WantVal})
+	}
+	mockedErrors = nil
+	mockedFatals = nil
+	valFactories := []struct {
+		name   string
+		f      func(test PanicValTest, pVal interface{})
+		gotVar *[]string
+	}{
+		{"Error", notEqualsFuncError, &mockedErrors},
+		{"Fatal", notEqualsFuncFatal, &mockedFatals},
+	}
+	for _, factory := range valFactories {
+		noPanic = nil
+		PanicsValLoop(valTable, nil, notPanicFunc, factory.f)
+		if len(noPanic) != 0 {
+			t.Errorf("PanicsValLoop() / %s factory: Unexpected panic-test failure(s): expected none, got %d:\n%#+v",
+				factory.name, len(noPanic), noPanic)
+		}
+		if len(*factory.gotVar) != len(wantNoEquals) {
+			t.Errorf("PanicsValLoop() / %s factory: Wrong number of panic-equals failures: expected %d, got %d:\n"+
+				"Expected failures:\n%#+v\nGot:\n%#+v",
+				factory.name, len(wantNoEquals), len(*factory.gotVar), wantNoEquals, *factory.gotVar)
+		} else {
+			for i := 0; i < len(*factory.gotVar); i++ {
+				if (*factory.gotVar)[i] != wantNoEquals[i] {
+					t.Errorf("PanicsValLoop() / %s factory: Wrong panic-equals failure: "+
+						"expected\n%#+v\ngot\n%#+v",
+						factory.name, wantNoEquals[i], (*factory.gotVar)[i])
 				}
 			}
 		}
