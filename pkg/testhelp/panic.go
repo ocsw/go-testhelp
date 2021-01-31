@@ -216,8 +216,8 @@ func PanicsVal(f func(), wantVal interface{}) (didPanic bool, pEquals bool, pVal
 // PanicsLoop runs through a slice of panic tests.  For any test function that does not panic, elseFunc is called with
 // the name from the test's struct.
 //
-// It is strongly suggested to test the actual panic values with PanicsStrLoop(), PanicsRELoop(), or PanicsValLoop()
-// instead of using this function.
+// It is strongly suggested to test the actual panic values with PanicsGetLoop(), PanicsStrLoop(), PanicsRELoop(), or
+// PanicsValLoop() instead of using this function.
 func PanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 	for _, test := range tests {
 		if !Panics(test.F) {
@@ -226,12 +226,45 @@ func PanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 	}
 }
 
+// PanicsGetLoop runs through a slice of panic tests.  For any test function that does not panic, elseFunc is called
+// with the name from the test's struct.  For any test function that does panic, valFunc is called with the panic value.
+//
+// Note that PanicsStrLoop(), PanicsRELoop(), and PanicsValLoop() provide ways to test the panic values that are
+// generally more convenient than this function.
+func PanicsGetLoop(tests []PanicTest, elseFunc func(testName string), valFunc func(pVal interface{})) {
+	for _, test := range tests {
+		didPanic, pVal := PanicsGet(test.F)
+		if !didPanic {
+			elseFunc(test.Name)
+		} else {
+			valFunc(pVal)
+		}
+	}
+}
+
 // NotPanicsLoop runs through a slice of panic tests.  For any test function that panics, elseFunc is called with the
 // name from the test's struct.
+//
+// It is strongly suggested to test the actual panic values with NotPanicsGetLoop(), PanicsStrLoop(), PanicsRELoop(),
+// or PanicsValLoop() instead of using this function.
 func NotPanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 	for _, test := range tests {
 		if Panics(test.F) {
 			elseFunc(test.Name)
+		}
+	}
+}
+
+// NotPanicsGetLoop runs through a slice of panic tests.  For any test function that panics, elseFunc is called with the
+// name from the test's struct and the panic value.
+//
+// Note that PanicsStrLoop(), PanicsRELoop(), and PanicsValLoop() provide ways to test the panic values that are
+// generally more convenient than this function.
+func NotPanicsGetLoop(tests []PanicTest, elseFunc func(testName string, pVal interface{})) {
+	for _, test := range tests {
+		didPanic, pVal := PanicsGet(test.F)
+		if didPanic {
+			elseFunc(test.Name, pVal)
 		}
 	}
 }
