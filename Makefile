@@ -59,7 +59,7 @@ format:
 lint:
 	@echo ">> Linting..."
 	golangci-lint run \
-		-E golint,lll,scopelint,whitespace \
+		-E exportloopref,lll,revive,whitespace \
 		--max-issues-per-linter 0 --max-same-issues 0 \
 		--new-from-rev HEAD~1
 
@@ -67,7 +67,7 @@ lint:
 lint-full:
 	@echo ">> Linting..."
 	golangci-lint run \
-		-E golint,lll,scopelint,whitespace \
+		-E exportloopref,lll,revive,whitespace \
 		--max-issues-per-linter 0 --max-same-issues 0
 
 test:
