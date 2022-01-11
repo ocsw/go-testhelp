@@ -1,4 +1,4 @@
-# Copyright 2021 Danielle Zephyr Malament
+# Copyright 2021-2022 Danielle Zephyr Malament
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,16 +59,16 @@ format:
 lint:
 	@echo ">> Linting..."
 	golangci-lint run \
-		-E exportloopref,lll,revive,whitespace \
+		-E exportloopref,goimports,lll,revive,whitespace \
 		--max-issues-per-linter 0 --max-same-issues 0 \
-		--new-from-rev HEAD~1
+		--new-from-rev HEAD~1 $(LINT_ARGS)
 
 # See 'lint'
 lint-full:
 	@echo ">> Linting..."
 	golangci-lint run \
-		-E exportloopref,lll,revive,whitespace \
-		--max-issues-per-linter 0 --max-same-issues 0
+		-E exportloopref,goimports,lll,revive,whitespace \
+		--max-issues-per-linter 0 --max-same-issues 0 $(LINT_ARGS)
 
 test:
 	@echo ">> Testing..."
