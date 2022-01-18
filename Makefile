@@ -53,21 +53,10 @@ format:
 
 # See https://github.com/golangci/golangci-lint; to install on macOS:
 # brew install golangci/tap/golangci-lint
-#
-# This target only checks new code, which is useful for existing codebases and
-# for CI systems.  To lint everything, use 'lint-full'.
 lint:
 	@echo ">> Linting..."
 	golangci-lint run \
-		-E exportloopref,goimports,lll,revive,whitespace \
-		--max-issues-per-linter 0 --max-same-issues 0 \
-		--new-from-rev HEAD~1 $(LINT_ARGS)
-
-# See 'lint'
-lint-full:
-	@echo ">> Linting..."
-	golangci-lint run \
-		-E exportloopref,goimports,lll,revive,whitespace \
+		-E exportloopref,goimports,lll,revive,stylecheck,whitespace \
 		--max-issues-per-linter 0 --max-same-issues 0 $(LINT_ARGS)
 
 test:
