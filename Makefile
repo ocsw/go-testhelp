@@ -46,7 +46,7 @@ GO_TEST_FILES ?= ./...
 all: lint test build
 
 # Format imports and remove unused ones; to install:
-# go get golang.org/x/tools/cmd/goimports
+# go install golang.org/x/tools/cmd/goimports@latest
 format:
 	@echo ">> Formatting..."
 	goimports -w cmd pkg
