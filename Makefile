@@ -12,10 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 # Generic Go Makefile
 
-# For each subdirectory of './cmd/' that contains a main.go file, builds a
+# For each subdirectory of ./cmd/ that contains a main.go file, builds a
 # binary with the same name as the subdirectory
+
+
+#################
+# include files #
+#################
+
+# Note: included files are appended to MAKEFILE_LIST and processed in that
+# order; the top-level file will always be first
+
+# Pull in repo-specific additions
+-include Makefile.local.mk
+
+
+#############
+# variables #
+#############
 
 # GO_TEST allows modifying the test command and options from the command line,
 # e.g.:
@@ -43,14 +60,64 @@ GO_TEST ?= gotestsum -f standard-verbose --
 # GO_TEST_FILES="./cmd/foo -run TestSomethingWorks" make test
 GO_TEST_FILES ?= ./...
 
+# Default test timeout; can be changed as with the other GO_TEST* variables
+GO_TEST_TIMEOUT ?= 20s
+
+
+##################
+# default target #
+##################
+
+##  :
+
+.PHONY: all
+
+## all: lint, test, and build all binaries (default)
 all: lint test build
 
-# Format imports and remove unused ones; to install:
+
+######################
+# Makefile logistics #
+######################
+
+##  :
+
+.PHONY: help confirm
+
+## help: print this help message
+# Note: to add a blank line to the help message, use '##  :' (with two spaces)
+help:
+	@echo 'Usage:'
+	@sed -n 's/^## //p' $(MAKEFILE_LIST) | column -t -s ':' |  sed -e 's/^/  /'
+
+confirm:
+	@printf "%s" "Are you sure? [y/N] " && read ans && [ "$$ans" = y ]
+
+# For wildcard targets, instead of .PHONY; see below
+# (no-op)
+FORCE: ;
+
+
+################################
+# testing, formatting, linting #
+################################
+
+##  :
+
+.PHONY: format lint test test-nc testsum testsum-nc
+
+## format: format all code, including adding/removing/reordering imports
+# to install:
 # go install golang.org/x/tools/cmd/goimports@latest
 format:
 	@echo ">> Formatting..."
-	goimports -w cmd pkg
+	for source_dir in cmd pkg internal; do \
+		if [ -d "$$source_dir" ]; then \
+			goimports -w "$$source_dir"; \
+		fi; \
+	done
 
+## lint: run static checks on the code
 # See https://github.com/golangci/golangci-lint; to install on macOS:
 # brew install golangci/tap/golangci-lint
 lint:
@@ -59,31 +126,47 @@ lint:
 		-E exportloopref,goimports,lll,revive,stylecheck,whitespace \
 		--max-issues-per-linter 0 --max-same-issues 0 $(LINT_ARGS)
 
+## test: run all tests
 test:
 	@echo ">> Testing..."
-	$(GO_TEST) -v -cover -timeout 20s $(GO_TEST_FILES)
+	$(GO_TEST) -v -race -cover -timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
 
+## test-nc: run all tests (skipping the cache)
 # Testing target that skips the cache (more convenient than setting GO_TEST on
 # the command line)
 test-nc:
 	@echo ">> Testing..."
-	$(GO_TEST) -count 1 -v -cover -timeout 20s $(GO_TEST_FILES)
+	$(GO_TEST) -count 1 -v -race -cover -timeout $(GO_TEST_TIMEOUT) \
+		$(GO_TEST_FILES)
 
+## testsum: run all tests using the gotestsum utility
 # Testing target that uses gotestsum (more convenient than setting GO_TEST on
 # the command line)
 # Note the variables for arguments to gotestsum and go test
 testsum:
 	@echo ">> Testing..."
-	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -cover -timeout 20s \
-		$(GO_TEST_FILES)
+	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -race -cover \
+		-timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
 
+## testsum-nc: run all tests using the gotestsum utility (skipping the cache)
 # Testing target that uses gotestsum and skips the cache (more convenient than
 # setting GO_TEST on the command line)
 # Note the variables for arguments to gotestsum and go test
 testsum-nc:
 	@echo ">> Testing..."
-	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -count 1 -cover \
-		-timeout 20s $(GO_TEST_FILES)
+	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -count 1 -race -cover \
+		-timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
+
+
+########################
+# building and running #
+########################
+
+##  :
+
+# Note: including e.g. build-% doesn't make build-foo phony, so we use the
+# FORCE trick instead
+.PHONY: build
 
 bin:
 	@echo ">> Making bin directory..."
@@ -93,6 +176,7 @@ output:
 	@echo ">> Making output directory..."
 	mkdir -p output
 
+## build: build all binaries available under the cmd/ directory in bin/
 build: bin output
 	@echo ">> Building all binaries..."
 	for cmddir in cmd/*; do \
@@ -101,11 +185,14 @@ build: bin output
 		fi; \
 	done
 
+## build-SUBDIR: build a binary from the cmd/SUBDIR directory in bin/
 build-%: bin output FORCE
+	@echo ">> Building binary '$(@:build-%=%)'..."
 	bin="$(@:build-%=%)" && \
 		GOOS=$$(uname | tr 'A-Z' 'a-z') \
 			go build -v -o "bin/$$bin" "cmd/$$bin/main.go"
 
+## run-SUBDIR: build and run a binary from cmd/SUBDIR (w/ARGS env var)
 # This builds one of the available binaries, then runs it.  If the ARGS
 # environment variable is set, its contents will be added to the command line
 # when running the binary.  For example, 'ARGS="foo bar" make run-bin1' will
@@ -115,6 +202,18 @@ build-%: bin output FORCE
 run-%: output build-% FORCE
 	"bin/$(@:run-%=%)" $$ARGS
 
+
+###############
+# cleaning up #
+###############
+
+##  :
+
+# Note: including clean-% doesn't make clean-foo phony, so we use the FORCE
+# trick instead
+.PHONY: clean fullclean
+
+## clean: remove all built binaries from bin/
 clean:
 	@echo ">> Removing all binaries..."
 	for cmddir in cmd/*; do \
@@ -123,14 +222,12 @@ clean:
 		fi; \
 	done
 
+## clean-NAME: remove the binary called NAME from bin/
 clean-%: FORCE
+	@echo ">> Removing binary '$(@:clean-%=%)'..."
 	rm -rf "bin/$(@:clean-%=%)"
 
+## fullclean: completely remove all binaries and output files (bin/ and output/)
 fullclean:
 	@echo ">> Removing all binaries and output files, including directories..."
 	rm -rf bin output
-
-# Including build-% doesn't make build-foo phony, so use the FORCE trick instead
-.PHONY: all format lint lint-full test test-nc testsum testsum-nc
-.PHONY: build clean fullclean
-FORCE: ;
