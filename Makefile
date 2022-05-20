@@ -129,14 +129,14 @@ lint:
 ## test: run all tests
 test:
 	@echo ">> Testing..."
-	$(GO_TEST) -v -race -cover -timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
+	$(GO_TEST) -v -race -cover -timeout "$(GO_TEST_TIMEOUT)" $(GO_TEST_FILES)
 
 ## test-nc: run all tests (skipping the cache)
 # Testing target that skips the cache (more convenient than setting GO_TEST on
 # the command line)
 test-nc:
 	@echo ">> Testing..."
-	$(GO_TEST) -count 1 -v -race -cover -timeout $(GO_TEST_TIMEOUT) \
+	$(GO_TEST) -count 1 -v -race -cover -timeout "$(GO_TEST_TIMEOUT)" \
 		$(GO_TEST_FILES)
 
 ## testsum: run all tests using the gotestsum utility
@@ -146,7 +146,7 @@ test-nc:
 testsum:
 	@echo ">> Testing..."
 	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -race -cover \
-		-timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
+		-timeout "$(GO_TEST_TIMEOUT)" $(GO_TEST_FILES)
 
 ## testsum-nc: run all tests using the gotestsum utility (skipping the cache)
 # Testing target that uses gotestsum and skips the cache (more convenient than
@@ -155,7 +155,7 @@ testsum:
 testsum-nc:
 	@echo ">> Testing..."
 	gotestsum $(GOTESTSUM_ARGS) -- $(GO_TEST_ARGS) -count 1 -race -cover \
-		-timeout $(GO_TEST_TIMEOUT) $(GO_TEST_FILES)
+		-timeout "$(GO_TEST_TIMEOUT)" $(GO_TEST_FILES)
 
 
 ########################
