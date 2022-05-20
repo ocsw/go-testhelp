@@ -192,13 +192,13 @@ build-%: bin output FORCE
 		GOOS=$$(uname | tr 'A-Z' 'a-z') \
 			go build -v -o "bin/$$bin" "cmd/$$bin/main.go"
 
-## run-SUBDIR: build and run a binary from cmd/SUBDIR (w/ARGS env var)
+## run-SUBDIR: build and run a binary from cmd/SUBDIR (allows ARGS="args")
 # This builds one of the available binaries, then runs it.  If the ARGS
 # environment variable is set, its contents will be added to the command line
 # when running the binary.  For example, 'ARGS="foo bar" make run-bin1' will
 # run 'bin1 foo bar' after building bin1.
-# This target was added to make it more convenient to iterate on code and run
-# it, without forgetting to rebuild each time.
+# ('ARGS="args"' can also be passed to the make command itself, but that might
+# not work on all versions of make.)
 run-%: output build-% FORCE
 	"bin/$(@:run-%=%)" $$ARGS
 
