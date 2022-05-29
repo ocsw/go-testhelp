@@ -15,7 +15,7 @@
 
 # Generic Go Makefile
 
-# For each subdirectory of ./cmd/ that contains a main.go file, builds a
+# For each subdirectory of cmd/ that contains a main.go file, builds a
 # binary with the same name as the subdirectory
 
 
@@ -26,7 +26,7 @@
 # Note: included files are appended to MAKEFILE_LIST and processed in that
 # order; the top-level file will always be first
 
-# Pull in repo-specific additions
+# Pull in repo-specific additions; ignore missing file
 -include Makefile.local.mk
 
 
@@ -49,7 +49,6 @@
 #
 # Sample command-line usage:
 #     GO_TEST="gotestsum -f dots -- -count 3" make test
-# (omit the quotes in this file)
 #
 # For CI systems, you probably want just 'go test', e.g.:
 #     GO_TEST="go test" make test
@@ -98,24 +97,30 @@ confirm:
 FORCE: ;
 
 
-################################
-# testing, formatting, linting #
-################################
+######################################
+# testing, formatting, linting, etc. #
+######################################
 
 ##  :
 
-.PHONY: format lint test test-nc testsum testsum-nc
+.PHONY: format tidy lint test test-nc testsum testsum-nc
 
 ## format: format all code, including adding/removing/reordering imports
 # to install:
 # go install golang.org/x/tools/cmd/goimports@latest
 format:
 	@echo ">> Formatting..."
-	for source_dir in cmd pkg internal; do \
+	for source_dir in cmd pkg internal src; do \
 		if [ -d "$$source_dir" ]; then \
 			goimports -w "$$source_dir"; \
 		fi; \
 	done
+
+## tidy: tidy and verify module dependencies (go.mod)
+tidy:
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
+	go mod verify
 
 ## lint: run static checks on the code
 # See https://github.com/golangci/golangci-lint; to install on macOS:
@@ -190,7 +195,7 @@ build-%: bin output FORCE
 	@echo ">> Building binary '$(@:build-%=%)'..."
 	bin="$(@:build-%=%)" && \
 		GOOS=$$(uname | tr 'A-Z' 'a-z') \
-			go build -v -o "bin/$$bin" "cmd/$$bin/main.go"
+			go build -v -o "bin/$$bin" "./cmd/$$bin/"
 
 ## run-SUBDIR: build and run a binary from cmd/SUBDIR (allows ARGS="args")
 # This builds one of the available binaries, then runs it.  If the ARGS
