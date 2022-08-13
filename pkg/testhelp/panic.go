@@ -106,29 +106,29 @@ func NotPanicsGet(f func()) (didNotPanic bool, pVal interface{}) {
 // reason.  You want to test what it does with a nil input, but what if it turns out to be panicking for another reason
 // and doesn't actually panic on a nil input?  Use PanicStr() like so to find out:
 //
-//     func NotNilTask(strs []string) {
-//     	stuff, err := allocateABunchOfStuff()
-//     	if err != nil {
-//     		panic("Out of Stuff")
-//     	}
-//     	if strs == nil {
-//     		panic("Can't do anything - input was nil")
-//     	}
-//     	// Do things
-//     	// ...
-//     }
+//	func NotNilTask(strs []string) {
+//		stuff, err := allocateABunchOfStuff()
+//		if err != nil {
+//			panic("Out of Stuff")
+//		}
+//		if strs == nil {
+//			panic("Can't do anything - input was nil")
+//		}
+//		// Do things
+//		// ...
+//	}
 //
-//     func TestNotNilTaskPanicsWithNil(t *testing.T) {
-//     	wantStr := "input was nil"
-//     	didPanic, pContainsStr, pVal := testhelp.PanicsStr(func() {
-//     		NotNilTask(nil)
-//     	}, wantStr)
-//     	if !didPanic {
-//     		t.Fatalf("Expected doing a NotNilTask with a nil input to panic")
-//     	} else if !pContainsStr {
-//     		t.Fatalf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v", wantStr, pVal)
-//     	}
-//     }
+//	func TestNotNilTaskPanicsWithNil(t *testing.T) {
+//		wantStr := "input was nil"
+//		didPanic, pContainsStr, pVal := testhelp.PanicsStr(func() {
+//			NotNilTask(nil)
+//		}, wantStr)
+//		if !didPanic {
+//			t.Fatalf("Expected doing a NotNilTask with a nil input to panic")
+//		} else if !pContainsStr {
+//			t.Fatalf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v", wantStr, pVal)
+//		}
+//	}
 //
 // The contents check can be bypassed by setting wantStr to "", which is contained by every string.  In this case,
 // pContainsStr will always be true (assuming the panic can be cast to a string), and you will still get the panic
