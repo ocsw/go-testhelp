@@ -54,7 +54,7 @@ type PanicValTest struct {
 
 // Panics tests if the given function panics, and returns a boolean that is true if it does.
 //
-// It is strongly suggested to test the actual panic value with PanicsGet(), PanicsStr(), PanicsRE(), or PanicsVal()
+// It is strongly suggested to test the actual panic value with PanicsGet, PanicsStr, PanicsRE, or PanicsVal
 // instead of using this function.
 func Panics(f func()) (didPanic bool) {
 	defer func() {
@@ -66,17 +66,17 @@ func Panics(f func()) (didPanic bool) {
 
 // NotPanics tests if the given function does not panic, and returns a boolean that is true if it does not.
 //
-// (This function is the opposite of Panics(), and is only included to help make the semantics of tests clearer.)
+// (This function is the opposite of Panics, and is only included to help make the semantics of tests clearer.)
 func NotPanics(f func()) (didNotPanic bool) {
 	return !Panics(f)
 }
 
 // PanicsGet tests if the given function panics, and returns a boolean that is true if it does.  If the function does
-// panic, the panic value itself is also returned.  (Specifically, this is the return value from recover(), which is
-// nil if the function did not panic.)
+// panic, the panic value itself is also returned.  (Specifically, this is the return value from recover, which is nil
+// if the function did not panic.)
 //
-// Note that PanicsStr(), PanicsRE(), and PanicsVal() provide ways to test the panic value that are generally more
-// convenient than this function.
+// Note that PanicsStr, PanicsRE, and PanicsVal provide ways to test the panic value that are generally more convenient
+// than this function.
 func PanicsGet(f func()) (didPanic bool, pVal interface{}) {
 	defer func() {
 		pVal = recover()
@@ -88,9 +88,9 @@ func PanicsGet(f func()) (didPanic bool, pVal interface{}) {
 
 // NotPanicsGet tests if the given function does not panic, and returns a boolean that is true if it does not.  If the
 // function does panic, the panic value itself is also returned.  (Specifically, this is the return value from
-// recover(), which is nil if the function did not panic.)
+// recover, which is nil if the function did not panic.)
 //
-// (This function is the opposite of PanicsGet(), and is only included to help make the semantics of tests clearer.)
+// (This function is the opposite of PanicsGet, and is only included to help make the semantics of tests clearer.)
 func NotPanicsGet(f func()) (didNotPanic bool, pVal interface{}) {
 	didPanic, _, v := PanicsStr(f, "")
 	return !didPanic, v
@@ -98,13 +98,13 @@ func NotPanicsGet(f func()) (didNotPanic bool, pVal interface{}) {
 
 // PanicsStr tests if the given function panics, and returns a boolean that is true if it does.  It also takes a string,
 // to allow checking the contents of the panic; if the function does panic, and the panic can be cast to a string
-// containing wantStr, pContainsStr will be true.  If the panic can be cast to an error value, the error's Error()
-// string will be used for the check.  The panic value itself is also returned.  (Specifically, this is the return
-// value from recover(), which is nil if the function did not panic.)
+// containing wantStr, pContainsStr will be true.  If the panic can be cast to an error value, the error's Error string
+// will be used for the check.  The panic value itself is also returned.  (Specifically, this is the return value from
+// recover, which is nil if the function did not panic.)
 //
 // For example, supposing you have a function that should panic with a nil input, but might also panic for some other
 // reason.  You want to test what it does with a nil input, but what if it turns out to be panicking for another reason
-// and doesn't actually panic on a nil input?  Use PanicStr() like so to find out:
+// and doesn't actually panic on a nil input?  Use PanicStr like so to find out:
 //
 //	func NotNilTask(strs []string) {
 //		stuff, err := allocateABunchOfStuff()
@@ -158,10 +158,10 @@ func PanicsStr(f func(), wantStr string) (didPanic bool, pContainsStr bool, pVal
 // PanicsRE tests if the given function panics, and returns a boolean that is true if it does.  It also takes a string,
 // to allow checking the contents of the panic; if the function does panic, and the panic can be cast to a string
 // matching the regular expression given by wantRE, pMatchesRE will be true.  If the panic can be cast to an error
-// value, the error's Error() string will be used for the check.  The panic value itself is also returned.
-// (Specifically, this is the return value from recover(), which is nil if the function did not panic.)
+// value, the error's Error string will be used for the check.  The panic value itself is also returned.
+// (Specifically, this is the return value from recover, which is nil if the function did not panic.)
 //
-// See PanicsStr() for a plain-string-flavored version of how to use this function.
+// See PanicsStr for a plain-string-flavored version of how to use this function.
 //
 // The contents check can be bypassed by setting wantRE to "", which matches any string.  In this case,
 // pMatchesRE will always be true (assuming the panic can be cast to a string), and you will still get the panic value.
@@ -197,10 +197,10 @@ func PanicsRE(f func(), wantRE string) (didPanic bool, pMatchesRE bool, pVal int
 
 // PanicsVal tests if the given function panics, and returns a boolean that is true if it does.  It also takes a value,
 // to allow checking the contents of the panic; if the function does panic, and the panic value equals wantVal, pEquals
-// will be true.  The panic value itself is also returned.  (Specifically, this is the return value from recover(),
-// which is nil if the function did not panic.)
+// will be true.  The panic value itself is also returned.  (Specifically, this is the return value from recover, which
+// is nil if the function did not panic.)
 //
-// See PanicsStr() for a string-flavored version of how to use this function.
+// See PanicsStr for a string-flavored version of how to use this function.
 //
 // PanicsVal itself panics if pVal and wantVal are of the same type, but it's not a type that Go can compare with ==.
 func PanicsVal(f func(), wantVal interface{}) (didPanic bool, pEquals bool, pVal interface{}) {
@@ -216,8 +216,8 @@ func PanicsVal(f func(), wantVal interface{}) (didPanic bool, pEquals bool, pVal
 // PanicsLoop runs through a slice of panic tests.  For any test function that does not panic, elseFunc is called with
 // the name from the test's struct.
 //
-// It is strongly suggested to test the actual panic values with PanicsGetLoop(), PanicsStrLoop(), PanicsRELoop(), or
-// PanicsValLoop() instead of using this function.
+// It is strongly suggested to test the actual panic values with PanicsGetLoop, PanicsStrLoop, PanicsRELoop, or
+// PanicsValLoop instead of using this function.
 func PanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 	for _, test := range tests {
 		if !Panics(test.F) {
@@ -229,8 +229,8 @@ func PanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 // PanicsGetLoop runs through a slice of panic tests.  For any test function that does not panic, elseFunc is called
 // with the name from the test's struct.  For any test function that does panic, valFunc is called with the panic value.
 //
-// Note that PanicsStrLoop(), PanicsRELoop(), and PanicsValLoop() provide ways to test the panic values that are
-// generally more convenient than this function.
+// Note that PanicsStrLoop, PanicsRELoop, and PanicsValLoop provide ways to test the panic values that are generally
+// more convenient than this function.
 func PanicsGetLoop(tests []PanicTest, elseFunc func(testName string), valFunc func(pVal interface{})) {
 	for _, test := range tests {
 		didPanic, pVal := PanicsGet(test.F)
@@ -245,8 +245,8 @@ func PanicsGetLoop(tests []PanicTest, elseFunc func(testName string), valFunc fu
 // NotPanicsLoop runs through a slice of panic tests.  For any test function that panics, elseFunc is called with the
 // name from the test's struct.
 //
-// It is strongly suggested to test the actual panic values with NotPanicsGetLoop(), PanicsStrLoop(), PanicsRELoop(),
-// or PanicsValLoop() instead of using this function.
+// It is strongly suggested to test the actual panic values with NotPanicsGetLoop, PanicsStrLoop, PanicsRELoop, or
+// PanicsValLoop instead of using this function.
 func NotPanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 	for _, test := range tests {
 		if Panics(test.F) {
@@ -258,8 +258,8 @@ func NotPanicsLoop(tests []PanicTest, elseFunc func(testName string)) {
 // NotPanicsGetLoop runs through a slice of panic tests.  For any test function that panics, elseFunc is called with the
 // name from the test's struct and the panic value.
 //
-// Note that PanicsStrLoop(), PanicsRELoop(), and PanicsValLoop() provide ways to test the panic values that are
-// generally more convenient than this function.
+// Note that PanicsStrLoop, PanicsRELoop, and PanicsValLoop provide ways to test the panic values that are generally
+// more convenient than this function.
 func NotPanicsGetLoop(tests []PanicTest, elseFunc func(testName string, pVal interface{})) {
 	for _, test := range tests {
 		didPanic, pVal := PanicsGet(test.F)
@@ -273,9 +273,9 @@ func NotPanicsGetLoop(tests []PanicTest, elseFunc func(testName string, pVal int
 // specific strings.  For any test function that does not panic, notPanicFunc is called with the name from the test's
 // struct.  For any test function that does panic, but for which the panic value cannot be cast to a string or error
 // containing the test's WantStr, notContainsFunc is called with test information and the panic value.  If wantStrAll
-// is not nil, it is used in place of the tests' wantStrs.  See also PanicsStr().
+// is not nil, it is used in place of the tests' wantStrs.  See also PanicsStr.
 //
-// See NotContainsFuncErrorFactory() and NotContainsFuncFatalFactory() for good starting points for notContainsFunc.
+// See NotContainsFuncErrorFactory and NotContainsFuncFatalFactory for good starting points for notContainsFunc.
 func PanicsStrLoop(tests []PanicStrTest, wantStrAll *string, notPanicFunc func(testName string),
 	notContainsFunc func(testName string, wantStr string, pVal interface{}),
 ) {
@@ -302,9 +302,9 @@ func PanicsStrLoop(tests []PanicStrTest, wantStrAll *string, notPanicFunc func(t
 // specific regular expressions.  For any test function that does not panic, notPanicFunc is called with the name from
 // the test's struct.  For any test function that does panic, but for which the panic value cannot be cast to a string
 // or error matching the test's WantRE, notMatchesFunc is called with test information and the panic value.  If
-// wantREAll is not nil, it is used in place of the tests' wantREs.  See also PanicsRE().
+// wantREAll is not nil, it is used in place of the tests' wantREs.  See also PanicsRE.
 //
-// See NotMatchesFuncErrorFactory() and NotMatchesFuncFatalFactory() for good starting points for notMatchesFunc.
+// See NotMatchesFuncErrorFactory and NotMatchesFuncFatalFactory for good starting points for notMatchesFunc.
 //
 // PanicsRELoop itself panics when attempting to run any test for which WantRE does not represent a valid regular
 // expression.
@@ -333,9 +333,9 @@ func PanicsRELoop(tests []PanicRETest, wantREAll *string, notPanicFunc func(test
 // PanicsValLoop runs through a slice of panic tests, including checking the panic values.  For any test function that
 // does not panic, notPanicFunc is called with the name from the test's struct.  For any test function that does panic,
 // but for which the panic value does not equal the test's WantVal, notEqualsFunc is called with test information and
-// the panic value.  If wantValAll is not nil, it is used in place of the tests' wantVals.  See also PanicsVal().
+// the panic value.  If wantValAll is not nil, it is used in place of the tests' wantVals.  See also PanicsVal.
 //
-// See NotEqualsFuncErrorFactory() and NotEqualsFuncFatalFactory() for good starting points for notEqualsFunc.
+// See NotEqualsFuncErrorFactory and NotEqualsFuncFatalFactory for good starting points for notEqualsFunc.
 //
 // PanicsValLoop itself panics when attempting to run any test for which the panic value and the test's WantVal are of
 // the same type, but it's not a type that Go can compare with ==.
@@ -362,14 +362,14 @@ func PanicsValLoop(tests []PanicValTest, wantValAll *interface{}, notPanicFunc f
 }
 
 // TestingT is a stub interface intended to be satisfied by a *testing.T.  It is here to help test factory functions
-// such as NotContainsFuncErrorFactory().
+// such as NotContainsFuncErrorFactory.
 type TestingT interface {
 	Errorf(format string, args ...interface{})
 	Fatalf(format string, args ...interface{})
 }
 
-// NotContainsFuncErrorFactory returns a function suitable for passing to PanicsStrLoop() as a notContainsFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+// NotContainsFuncErrorFactory returns a function suitable for passing to PanicsStrLoop as a notContainsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf with a generic informative message.
 func NotContainsFuncErrorFactory(t TestingT) func(testName string, wantStr string, pVal interface{}) {
 	return func(testName string, wantStr string, pVal interface{}) {
 		t.Errorf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v\nin test '%s'",
@@ -377,8 +377,8 @@ func NotContainsFuncErrorFactory(t TestingT) func(testName string, wantStr strin
 	}
 }
 
-// NotContainsFuncFatalFactory returns a function suitable for passing to PanicsStrLoop() as a notContainsFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+// NotContainsFuncFatalFactory returns a function suitable for passing to PanicsStrLoop as a notContainsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf with a generic informative message.
 func NotContainsFuncFatalFactory(t TestingT) func(testName string, wantStr string, pVal interface{}) {
 	return func(testName string, wantStr string, pVal interface{}) {
 		t.Fatalf("Incorrect panic value: expected a string containing\n\"%s\"\ngot\n%#+v\nin test '%s'",
@@ -386,8 +386,8 @@ func NotContainsFuncFatalFactory(t TestingT) func(testName string, wantStr strin
 	}
 }
 
-// NotMatchesFuncErrorFactory returns a function suitable for passing to PanicsRELoop() as a notMatchesFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+// NotMatchesFuncErrorFactory returns a function suitable for passing to PanicsRELoop as a notMatchesFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf with a generic informative message.
 func NotMatchesFuncErrorFactory(t TestingT) func(testName string, wantRE string, pVal interface{}) {
 	return func(testName string, wantRE string, pVal interface{}) {
 		t.Errorf("Incorrect panic value: expected a string matching\n\"%s\"\ngot\n%#+v\nin test '%s'",
@@ -395,8 +395,8 @@ func NotMatchesFuncErrorFactory(t TestingT) func(testName string, wantRE string,
 	}
 }
 
-// NotMatchesFuncFatalFactory returns a function suitable for passing to PanicsRELoop() as a notMatchesFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+// NotMatchesFuncFatalFactory returns a function suitable for passing to PanicsRELoop as a notMatchesFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf with a generic informative message.
 func NotMatchesFuncFatalFactory(t TestingT) func(testName string, wantRE string, pVal interface{}) {
 	return func(testName string, wantRE string, pVal interface{}) {
 		t.Fatalf("Incorrect panic value: expected a string matching\n\"%s\"\ngot\n%#+v\nin test '%s'",
@@ -404,8 +404,8 @@ func NotMatchesFuncFatalFactory(t TestingT) func(testName string, wantRE string,
 	}
 }
 
-// NotEqualsFuncErrorFactory returns a function suitable for passing to PanicsValLoop() as a notEqualsFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Errorf() with a generic informative message.
+// NotEqualsFuncErrorFactory returns a function suitable for passing to PanicsValLoop as a notEqualsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Errorf with a generic informative message.
 func NotEqualsFuncErrorFactory(t TestingT) func(testName string, wantVal interface{}, pVal interface{}) {
 	return func(testName string, wantVal interface{}, pVal interface{}) {
 		t.Errorf("Incorrect panic value: expected\n%#+v\ngot\n%#+v\nin test '%s'",
@@ -413,8 +413,8 @@ func NotEqualsFuncErrorFactory(t TestingT) func(testName string, wantVal interfa
 	}
 }
 
-// NotEqualsFuncFatalFactory returns a function suitable for passing to PanicsValLoop() as a notEqualsFunc.  The
-// returned function is a closure over a *testing.T which uses it to call Fatalf() with a generic informative message.
+// NotEqualsFuncFatalFactory returns a function suitable for passing to PanicsValLoop as a notEqualsFunc.  The
+// returned function is a closure over a *testing.T which uses it to call Fatalf with a generic informative message.
 func NotEqualsFuncFatalFactory(t TestingT) func(testName string, wantVal interface{}, pVal interface{}) {
 	return func(testName string, wantVal interface{}, pVal interface{}) {
 		t.Fatalf("Incorrect panic value: expected\n%#+v\ngot\n%#+v\nin test '%s'",

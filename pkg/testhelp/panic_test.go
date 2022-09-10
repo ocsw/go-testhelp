@@ -22,7 +22,7 @@ import (
 	"testing"
 )
 
-// Tests Panics(), PanicsGet(), PanicsStr(), and PanicsRE()
+// Tests Panics, PanicsGet, PanicsStr, and PanicsRE
 func TestPanicsX4(t *testing.T) {
 	var didPanic bool
 	var pContainsStr bool
@@ -71,7 +71,7 @@ func TestPanicsX4(t *testing.T) {
 		{"np", func() {}, "ppp", "p{3}[0-9]{3}", false, false, false, nil},
 	}
 	for _, test := range tests {
-		// test Panics()
+		// test Panics
 		didPanic = Panics(test.f)
 		if didPanic != test.wantPanics {
 			if test.wantPanics == true {
@@ -81,7 +81,7 @@ func TestPanicsX4(t *testing.T) {
 			}
 		}
 
-		// test PanicsGet()
+		// test PanicsGet
 		didPanic, pVal = PanicsGet(test.f)
 		if didPanic != test.wantPanics {
 			if test.wantPanics == true {
@@ -95,7 +95,7 @@ func TestPanicsX4(t *testing.T) {
 				test.wantPVal, pVal, test.name)
 		}
 
-		// test PanicsStr()
+		// test PanicsStr
 		didPanic, pContainsStr, pVal = PanicsStr(test.f, test.inputStr)
 		if didPanic != test.wantPanics {
 			if test.wantPanics == true {
@@ -116,7 +116,7 @@ func TestPanicsX4(t *testing.T) {
 				test.wantPVal, pVal, test.name)
 		}
 
-		// test PanicsRE()
+		// test PanicsRE
 		didPanic, pMatchesRE, pVal = PanicsRE(test.f, test.inputRE)
 		if didPanic != test.wantPanics {
 			if test.wantPanics == true {
@@ -145,7 +145,7 @@ func TestPanicsREPanicsWithBadRE(t *testing.T) {
 	var pVal interface{}
 
 	badRE := "[a-z" // no closing ]
-	// want this from PanicsStr(), while testing a func containing PanicsRE()
+	// want this from PanicsStr, while testing a func containing PanicsRE
 	wantStr := "Regexp could not be compiled"
 
 	tests := []struct {
@@ -156,8 +156,8 @@ func TestPanicsREPanicsWithBadRE(t *testing.T) {
 		{"non-string pVal", func() { PanicsRE(func() { panic(27) }, badRE) }},
 	}
 	for _, test := range tests {
-		// It's a little suspect to use PanicsStr() here, but PanicsStr() and PanicsRE() don't reference each other, and
-		// we have other tests for PanicsStr()
+		// It's a little suspect to use PanicsStr here, but PanicsStr and PanicsRE don't reference each other, and we
+		// have other tests for PanicsStr
 		didPanic, pContainsStr, pVal = PanicsStr(test.f, wantStr)
 		if !didPanic {
 			t.Fatalf("Expected PanicsRE() itself to panic in test '%s'", test.name)
@@ -176,9 +176,9 @@ func TestPanicsVal(t *testing.T) {
 	tests := []struct {
 		name string
 		f    func()
-		// input to PanicsVal()
+		// input to PanicsVal
 		inputVal interface{}
-		// want from PanicsVal()
+		// want from PanicsVal
 		wantPanics bool
 		wantEquals bool
 		wantPVal   interface{}
@@ -232,7 +232,7 @@ func TestPanicsValPanicsWithUncomparableType(t *testing.T) {
 	var pContainsStr bool
 	var pVal interface{}
 
-	// want this from PanicsStr(), while testing a func containing PanicsVal()
+	// want this from PanicsStr, while testing a func containing PanicsVal
 	wantStr := "runtime error: comparing uncomparable type"
 
 	tests := []struct {
@@ -251,8 +251,8 @@ func TestPanicsValPanicsWithUncomparableType(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		// It's a little suspect to use PanicsStr() here, but PanicsStr() and PanicsVal() don't reference each other,
-		// and we have other tests for PanicsStr()
+		// It's a little suspect to use PanicsStr here, but PanicsStr and PanicsVal don't reference each other, and we
+		// have other tests for PanicsStr
 		didPanic, pContainsStr, pVal = PanicsStr(test.f, wantStr)
 		if !didPanic {
 			t.Fatalf("Expected PanicsVal() itself to panic in test '%s'", test.name)
@@ -263,7 +263,7 @@ func TestPanicsValPanicsWithUncomparableType(t *testing.T) {
 	}
 }
 
-// Tests NotPanics() and NotPanicsGet()
+// Tests NotPanics and NotPanicsGet
 func TestNotPanicsX2(t *testing.T) {
 	var didNotPanic bool
 	var pVal interface{}
@@ -279,7 +279,7 @@ func TestNotPanicsX2(t *testing.T) {
 		{"p non-string", func() { panic(27) }, false, 27},
 	}
 	for _, test := range tests {
-		// test NotPanics()
+		// test NotPanics
 		didNotPanic = NotPanics(test.f)
 		if didNotPanic != test.wantNotPanics {
 			if test.wantNotPanics == true {
@@ -289,7 +289,7 @@ func TestNotPanicsX2(t *testing.T) {
 			}
 		}
 
-		// test NotPanicsGet()
+		// test NotPanicsGet
 		didNotPanic, pVal = NotPanicsGet(test.f)
 		if didNotPanic != test.wantNotPanics {
 			if test.wantNotPanics == true {
@@ -318,7 +318,7 @@ type NoCMCallbackResult struct {
 	Val       interface{}
 }
 
-// Tests PanicsLoop(), PanicsGetLoop(), PanicsStrLoop(), and PanicsRELoop()
+// Tests PanicsLoop, PanicsGetLoop, PanicsStrLoop, and PanicsRELoop
 func TestPanicsLoopX4(t *testing.T) {
 	var noPanic []string
 	var noContains []NoCMCallbackResult
@@ -326,7 +326,7 @@ func TestPanicsLoopX4(t *testing.T) {
 	var plainTable []PanicTest
 	var strTable []PanicStrTest
 	var reTable []PanicRETest
-	var pVals []interface{} // for PanicsGetLoop()
+	var pVals []interface{} // for PanicsGetLoop
 
 	pErr := errors.New("ppp110")
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
@@ -336,7 +336,7 @@ func TestPanicsLoopX4(t *testing.T) {
 	notMatchesFunc := func(testName string, wantRE string, pVal interface{}) {
 		noMatches = append(noMatches, NoCMCallbackResult{testName, wantRE, pVal})
 	}
-	valFunc := func(pVal interface{}) { // for PanicsGetLoop()
+	valFunc := func(pVal interface{}) { // for PanicsGetLoop
 		pVals = append(pVals, pVal)
 	}
 
@@ -346,12 +346,12 @@ func TestPanicsLoopX4(t *testing.T) {
 		wantNoPanic    []string
 		wantNoContains []NoCMCallbackResult
 		wantNoMatches  []NoCMCallbackResult
-		wantVals       []interface{} // for PanicsGetLoop()
+		wantVals       []interface{} // for PanicsGetLoop
 	}{
 		{
 			"p, cm; p, cm",
 			[]PanicStrRETest{
-				// Handle the error -> string case while we're at it, for PanicsStrLoop() and PanicsRELoop()
+				// Handle the error -> string case while we're at it, for PanicsStrLoop and PanicsRELoop
 				{"p, cm; p, cm: 1", func() { panic(pErr) }, "ppp", "p{3}[0-9]{3}"},
 				{"p, cm; p, cm: 2", func() { panic("ppp111") }, "ppp", "p{3}[0-9]{3}"},
 			},
@@ -459,7 +459,7 @@ func TestPanicsLoopX4(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		// test PanicsLoop()
+		// test PanicsLoop
 		noPanic = nil
 		plainTable = []PanicTest{}
 		for _, tableEntry := range test.pTable {
@@ -479,7 +479,7 @@ func TestPanicsLoopX4(t *testing.T) {
 			}
 		}
 
-		// test PanicsGetLoop()
+		// test PanicsGetLoop
 		noPanic = nil
 		pVals = nil
 		plainTable = []PanicTest{}
@@ -512,7 +512,7 @@ func TestPanicsLoopX4(t *testing.T) {
 			}
 		}
 
-		// test PanicsStrLoop()
+		// test PanicsStrLoop
 		noPanic = nil
 		noContains = nil
 		strTable = []PanicStrTest{}
@@ -545,7 +545,7 @@ func TestPanicsLoopX4(t *testing.T) {
 			}
 		}
 
-		// test PanicsRELoop()
+		// test PanicsRELoop
 		noPanic = nil
 		noMatches = nil
 		reTable = []PanicRETest{}
@@ -580,7 +580,7 @@ func TestPanicsLoopX4(t *testing.T) {
 	}
 }
 
-// Tests wantStrAll/wantREAll in PanicsStrLoop() and PanicsRELoop()
+// Tests wantStrAll/wantREAll in PanicsStrLoop and PanicsRELoop
 func TestPanicsLoopWantAllX2(t *testing.T) {
 	var noPanic []string
 	var noContains []NoCMCallbackResult
@@ -695,7 +695,7 @@ func TestPanicsLoopWantAllX2(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		// test PanicsStrLoop()
+		// test PanicsStrLoop
 		noPanic = nil
 		noContains = nil
 		strTable = []PanicStrTest{}
@@ -721,7 +721,7 @@ func TestPanicsLoopWantAllX2(t *testing.T) {
 			}
 		}
 
-		// test PanicsRELoop()
+		// test PanicsRELoop
 		noPanic = nil
 		noMatches = nil
 		reTable = []PanicRETest{}
@@ -750,13 +750,13 @@ func TestPanicsLoopWantAllX2(t *testing.T) {
 }
 
 func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
-	// for PanicsStr(), while testing a func containing PanicsRELoop()
+	// for PanicsStr, while testing a func containing PanicsRELoop
 	var didPanic bool
 	var pContainsStr bool
 	var pVal interface{}
 	wantStr := "Regexp could not be compiled"
 
-	// for the PanicsRELoop() being run by PanicsStr()
+	// for the PanicsRELoop being run by PanicsStr
 	var noPanic []string
 	var noMatches []NoCMCallbackResult
 	badRE1 := "[a-z" // no closing ]
@@ -778,7 +778,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 				{"ok, not ok: 1", func() { panic("ppp111") }, "c{3}[0-9]{3}"},
 				{"ok, not ok: 2", func() { panic("ppp112") }, badRE2},
 			},
-			// first test within PanicsRELoop() proceeds normally, second one panics
+			// first test within PanicsRELoop proceeds normally, second one panics
 			[]NoCMCallbackResult{{"ok, not ok: 1", "c{3}[0-9]{3}", "ppp111"}},
 		},
 		{
@@ -803,8 +803,8 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 		noPanic = nil
 		noMatches = nil
 
-		// It's a little suspect to use PanicsStr() here, but PanicsStr() and PanicsRELoop() don't reference each
-		// other, and we have other tests for PanicsStr()
+		// It's a little suspect to use PanicsStr here, but PanicsStr and PanicsRELoop don't reference each other, and
+		// we have other tests for PanicsStr
 		didPanic, pContainsStr, pVal = PanicsStr(func() {
 			// nolint: scopelint
 			PanicsRELoop(test.pTable, nil, notPanicFunc, notMatchesFunc)
@@ -816,7 +816,7 @@ func TestPanicsRELoopPanicsWithBadRE(t *testing.T) {
 				"%#+v\ngot\n%#+v\nin test table '%s'", wantStr, pVal, test.name)
 		}
 
-		// Now test the results of PanicsRELoop() itself
+		// Now test the results of PanicsRELoop itself
 		if len(noPanic) != 0 {
 			t.Errorf("PanicsRELoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s':\n"+
 				"%#+v",
@@ -1098,13 +1098,13 @@ func TestPanicsValLoopWantValAll(t *testing.T) {
 }
 
 func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
-	// for PanicsStr(), while testing a func containing PanicsValLoop()
+	// for PanicsStr, while testing a func containing PanicsValLoop
 	var didPanic bool
 	var pContainsStr bool
 	var pVal interface{}
 	wantStr := "runtime error: comparing uncomparable type"
 
-	// for the PanicsValLoop() being run by PanicsStr()
+	// for the PanicsValLoop being run by PanicsStr
 	var noPanic []string
 	var noEquals []NoEqualsCallbackResult
 	notPanicFunc := func(testName string) { noPanic = append(noPanic, testName) }
@@ -1124,7 +1124,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 				{"ok, not ok: 1", func() { panic("ppp111") }, "zzz111"},
 				{"ok, not ok: 2", func() { panic([]string{"a", "b"}) }, []string{"a", "b"}},
 			},
-			// first test within PanicsValLoop() proceeds normally, second one panics
+			// first test within PanicsValLoop proceeds normally, second one panics
 			[]NoEqualsCallbackResult{{"ok, not ok: 1", "zzz111", "ppp111"}},
 		},
 		{
@@ -1150,8 +1150,8 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 		noPanic = nil
 		noEquals = nil
 
-		// It's a little suspect to use PanicsStr() here, but PanicsStr() and PanicsValLoop() don't reference each
-		// other, and we have other tests for PanicsStr()
+		// It's a little suspect to use PanicsStr here, but PanicsStr and PanicsValLoop don't reference each other, and
+		// we have other tests for PanicsStr
 		didPanic, pContainsStr, pVal = PanicsStr(func() {
 			// nolint: scopelint
 			PanicsValLoop(test.pTable, nil, notPanicFunc, notEqualsFunc)
@@ -1163,7 +1163,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 				"%#+v\ngot\n%#+v\nin test table '%s'", wantStr, pVal, test.name)
 		}
 
-		// Now test the results of PanicsValLoop() itself
+		// Now test the results of PanicsValLoop itself
 		if len(noPanic) != 0 {
 			t.Errorf("PanicsValLoop(): Unexpected panic-test failure(s): expected none, got %d in test table '%s':\n"+
 				"%#+v",
@@ -1184,7 +1184,7 @@ func TestPanicsValLoopPanicsWithUncomparableType(t *testing.T) {
 	}
 }
 
-// Tests NotPanicsLoop(), NotPanicsGetLoop()
+// Tests NotPanicsLoop, NotPanicsGetLoop
 func TestNotPanicsLoopX2(t *testing.T) {
 	var failed []string
 	var pVals []interface{}
@@ -1239,7 +1239,7 @@ func TestNotPanicsLoopX2(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		// test NotPanicsLoop()
+		// test NotPanicsLoop
 		failed = nil
 		NotPanicsLoop(test.pTable, elseFunc)
 		if len(failed) != len(test.wantFailed) {
@@ -1255,7 +1255,7 @@ func TestNotPanicsLoopX2(t *testing.T) {
 			}
 		}
 
-		// test NotPanicsGetLoop()
+		// test NotPanicsGetLoop
 		failed = nil
 		pVals = nil
 		NotPanicsGetLoop(test.pTable, elseFuncVal)
@@ -1306,8 +1306,8 @@ type PanicStrREValTest struct {
 	WantVal interface{}
 }
 
-// Tests NotContainsFuncErrorFactory(), NotContainsFuncFatalFactory(), NotMatchesFuncErrorFactory(),
-// NotMatchesFuncFatalFactory(), NotEqualsFuncErrorFactory(), and NotEqualsFuncFatalFactory()
+// Tests NotContainsFuncErrorFactory, NotContainsFuncFatalFactory, NotMatchesFuncErrorFactory,
+// NotMatchesFuncFatalFactory, NotEqualsFuncErrorFactory, and NotEqualsFuncFatalFactory
 func TestPanicsLoopFactoriesX6(t *testing.T) {
 	var noPanic []string
 
@@ -1334,7 +1334,7 @@ func TestPanicsLoopFactoriesX6(t *testing.T) {
 		"Incorrect panic value: expected\n\"ppp222\"\ngot\n\"rrr222\"\nin test 'badtest'",
 	}
 
-	// Test NotContainsFuncErrorFactory() and NotContainsFuncFatalFactory() with PanicsStrLoop()
+	// Test NotContainsFuncErrorFactory and NotContainsFuncFatalFactory with PanicsStrLoop
 	strTable := []PanicStrTest{}
 	for _, tableEntry := range strReValTable {
 		strTable = append(strTable, PanicStrTest{tableEntry.Name, tableEntry.F, tableEntry.WantStr})
@@ -1371,7 +1371,7 @@ func TestPanicsLoopFactoriesX6(t *testing.T) {
 		}
 	}
 
-	// Test NotMatchesFuncErrorFactory() and NotMatchesFuncFatalFactory() with PanicsRELoop()
+	// Test NotMatchesFuncErrorFactory and NotMatchesFuncFatalFactory with PanicsRELoop
 	reTable := []PanicRETest{}
 	for _, tableEntry := range strReValTable {
 		reTable = append(reTable, PanicRETest{tableEntry.Name, tableEntry.F, tableEntry.WantRE})
@@ -1408,7 +1408,7 @@ func TestPanicsLoopFactoriesX6(t *testing.T) {
 		}
 	}
 
-	// Test NotEqualsFuncErrorFactory() and NotEqualsFuncFatalFactory() with PanicsValLoop()
+	// Test NotEqualsFuncErrorFactory and NotEqualsFuncFatalFactory with PanicsValLoop
 	valTable := []PanicValTest{}
 	for _, tableEntry := range strReValTable {
 		valTable = append(valTable, PanicValTest{tableEntry.Name, tableEntry.F, tableEntry.WantVal})
