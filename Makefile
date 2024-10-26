@@ -192,7 +192,7 @@ build: bin output
 
 ## build-SUBDIR: build a binary from the cmd/SUBDIR directory in bin/
 build-%: bin output FORCE
-	@echo ">> Building binary '$(@:build-%=%)'..."
+	@printf "%s\n" ">> Building binary '$(@:build-%=%)'..."
 	bin="$(@:build-%=%)" && \
 		GOOS=$$(uname | tr 'A-Z' 'a-z') \
 			go build -v -o "bin/$$bin" "./cmd/$$bin/"
@@ -229,7 +229,7 @@ clean:
 
 ## clean-NAME: remove the binary called NAME from bin/
 clean-%: FORCE
-	@echo ">> Removing binary '$(@:clean-%=%)'..."
+	@printf "%s\n" ">> Removing binary '$(@:clean-%=%)'..."
 	rm -rf "bin/$(@:clean-%=%)"
 
 ## fullclean: completely remove all binaries and output files (bin/ and output/)
