@@ -124,7 +124,8 @@ tidy:
 
 ## lint: run static checks on the code
 # See https://github.com/golangci/golangci-lint; to install on macOS:
-# brew install golangci/tap/golangci-lint
+# brew install golangci-lint
+# (They now recommend the formula in the Homebrew core tap over their tap)
 lint:
 	@echo ">> Linting..."
 	golangci-lint run \
